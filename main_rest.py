@@ -2,9 +2,8 @@ from flask import Flask, request, jsonify, abort
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 import json
-import copy
 
-with open("holder_f.json") as f:
+with open("/home/myr/Python/lab6/Lab6/holder_f.json") as f:
     HOLDER = json.load(f)
 
 DB_URI = "mysql+pymysql://{user}:{password}@{host}:{port}/{db}".format(
@@ -28,22 +27,25 @@ class Item(db.Model):
     country = db.Column(db.String(80), unique=False)
     provider = db.Column(db.String(80), unique=False)
 
-    def __init__(self, name, price, country, provider):
+    def __init__(self, name, price, country, provider,id):
         self.name=name
         self.price = price
-        self.country = country
         self.provider = provider
-
+        self.country = country
 
 class ItemSchema(ma.Schema):
     class Meta:
-        fields = ("name", "price", "country", "provider")
-
+        fields = ("id","name", "price", "country", "provider")
 
 item_schema = ItemSchema()
 items_schema = ItemSchema(many=True)
 
 
+@app.route("/")
+def say_hi():
+    return("Hallo!")
+
+#POST
 @app.route("/item", methods=["POST"])
 def add_item():
     data = ItemSchema().load(request.json)
@@ -51,6 +53,7 @@ def add_item():
 
     db.session.add(new_item)
     db.session.commit()
+    print(item_schema.dump(new_item))
     return jsonify(new_item)
 
 
@@ -89,6 +92,7 @@ def item_update(id):
     return item_schema.jsonify(item)
 
 
+
 @app.route("/item/<id>", methods=["DELETE"])
 def item_delete(id):
     item = Item.query.get(id)
@@ -102,5 +106,6 @@ def item_delete(id):
     return item_schema.jsonify(item)
 
 
+
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1")
+    app.run(debug=True)
